@@ -1,88 +1,44 @@
- // ========== Flashcard Generator Demo with Flask Backend ==========
+// Wait until the DOM is fully loaded
+document.addEventListener("DOMContentLoaded", function() {
 
-// Select elements
-const notesInput = document.getElementById("notes");
-const generateBtn = document.getElementById("generate-btn");
-const flashcardsContainer = document.getElementById("flashcards-container");
+  const generateBtn = document.getElementById("generate-btn");
+  const notesTextarea = document.getElementById("notes");
+  const flashcardsContainer = document.getElementById("flashcards-container");
 
-// ---------------------------
-// Render flashcards on the page
-// ---------------------------
-function renderFlashcards(cards) {
-  flashcardsContainer.innerHTML = ""; // clear previous
+  // Function to generate flashcards
+  generateBtn.addEventListener("click", function() {
+    const notes = notesTextarea.value.trim();
 
-  if (cards.length === 0) {
-    flashcardsContainer.innerHTML = "<p>No flashcards generated. Try adding more notes!</p>";
-    return;
-  }
-
-  cards.forEach(card => {
-    let cardDiv = document.createElement("div");
-    cardDiv.className = "flashcard";
-
-    cardDiv.innerHTML = `
-      <div class="flashcard-inner">
-        <div class="flashcard-front">
-          <h4>${card.question}</h4>
-        </div>
-        <div class="flashcard-back">
-          <p><strong>Answer:</strong> ${card.answer}</p>
-        </div>
-      </div>
-    `;
-    flashcardsContainer.appendChild(cardDiv);
-  });
-}
-
-// ---------------------------
-// Fetch all saved flashcards
-// ---------------------------
-async function fetchSavedFlashcards() {
-  try {
-    const response = await fetch("http://127.0.0.1:5000/api/flashcards");
-    const data = await response.json();
-    renderFlashcards(data);
-  } catch (err) {
-    console.error("Error fetching saved flashcards:", err);
-  }
-}
-
-// ---------------------------
-// Generate flashcards button
-// ---------------------------
-generateBtn.addEventListener("click", async () => {
-  let text = notesInput.value.trim();
-
-  if (text === "") {
-    alert("Please enter some notes first!");
-    return;
-  }
-
-  try {
-    // Call Flask backend API to generate flashcards
-    const response = await fetch("http://127.0.0.1:5000/api/generate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ notes: text })
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      // Refresh display with newly generated + saved flashcards
-      await fetchSavedFlashcards();
-    } else {
-      alert(data.error || "Something went wrong!");
+    if (!notes) {
+      alert("Please paste your notes first!");
+      return;
     }
-  } catch (err) {
-    console.error("Error:", err);
-    alert("Unable to connect to the server. Is Flask running?");
-  }
-});
 
-// ---------------------------
-// Initial fetch when page loads
-// ---------------------------
-window.addEventListener("DOMContentLoaded", fetchSavedFlashcards);
+    // Clear previous flashcards
+    flashcardsContainer.innerHTML = "";
+
+    // Split notes by lines
+    const lines = notes.split("\n").filter(line => line.trim() !== "");
+
+    // Generate a flashcard for each line
+    lines.forEach(line => {
+      const card = document.createElement("div");
+      card.classList.add("flashcard");
+      card.innerHTML = `
+        <div class="flashcard-inner">
+          <div class="flashcard-front">${line}</div>
+          <div class="flashcard-back">Answer for: ${line}</div>
+        </div>
+      `;
+      flashcardsContainer.appendChild(card);
+    });
+  });
+
+  // Optional: Flip flashcard on click
+  flashcardsContainer.addEventListener("click", function(e) {
+    const cardInner = e.target.closest(".flashcard-inner");
+    if (cardInner) {
+      cardInner.classList.toggle("flipped");
+    }
+  });
+});
